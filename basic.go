@@ -8,7 +8,13 @@ import (
 	"syscall"
 )
 
-func Basic(r Root) {
+// executes given Root with RRR (Register Resolve Release) strategy
+// implements gracefull shutdown
+// firstly invokes Register and panics when Register returns error
+// if Register success - invokes Resolve
+// gracefull shutdown will catch term signal and close ctx
+// after Resolve is complete somehow - invokes Release.
+func BasicEntry(r Root) {
 	// register
 	errors := r.Register()
 	if errors != nil {
