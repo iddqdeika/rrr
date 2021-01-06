@@ -33,7 +33,7 @@ type jsonConfig struct {
 	pathPrefix string
 }
 
-func (j *jsonConfig) Child(path string) *jsonConfig {
+func (j *jsonConfig) Child(path string) Config {
 	if j.pathPrefix != "" {
 		path = j.pathPrefix + jsonPathDelimiter + path
 	}
@@ -43,7 +43,7 @@ func (j *jsonConfig) Child(path string) *jsonConfig {
 	}
 }
 
-func (j *jsonConfig) GetArray(path string) ([]*jsonConfig, error) {
+func (j *jsonConfig) GetArray(path string) ([]Config, error) {
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (j *jsonConfig) GetArray(path string) ([]*jsonConfig, error) {
 
 	switch arr := val.(type) {
 	case []interface{}:
-		res := make([]*jsonConfig, 0)
+		res := make([]Config, 0)
 		for i, v := range arr {
 			switch m := v.(type) {
 			case map[string]interface{}:
