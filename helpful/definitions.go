@@ -11,6 +11,13 @@ type Config interface {
 	Child(path string) Config
 }
 
+// Config interface.
+// Also can provide data for Configuration source template (json footprint, etc)
+type ConfigGenerator interface {
+	Generate() ([]byte, error)
+	Config
+}
+
 // Logging interface
 type Logger interface {
 	Errorf(format string, a ...interface{})

@@ -11,7 +11,11 @@ import (
 
 const jsonPathDelimiter = "."
 
-func NewJsonCfg(fileName string) (*jsonConfig, error) {
+func NewJsonCfg(fileName string) (Config, error) {
+	return newJsonCfg(fileName)
+}
+
+func newJsonCfg(fileName string) (*jsonConfig, error) {
 	cfg := &jsonConfig{
 		cfg: make(map[string]interface{}),
 	}
@@ -28,12 +32,25 @@ func NewJsonCfg(fileName string) (*jsonConfig, error) {
 	return cfg, nil
 }
 
+func NewJsonCfgWithGenerator(fileName string) (ConfigGenerator, error){
+	cfg, err := newJsonCfg(fileName)
+	if err != nil{
+		return nil, err
+	}
+	cfg.generator = NewJsonConfigGenerator()
+	return cfg, nil
+}
+
 type jsonConfig struct {
 	cfg        map[string]interface{}
 	pathPrefix string
+	generator  *jsonConfigGenerator
 }
 
 func (j *jsonConfig) Child(path string) Config {
+	if j.generator != nil{
+		j.generator.Child(path)
+	}
 	if j.pathPrefix != "" {
 		path = j.pathPrefix + jsonPathDelimiter + path
 	}
@@ -44,6 +61,9 @@ func (j *jsonConfig) Child(path string) Config {
 }
 
 func (j *jsonConfig) GetArray(path string) ([]Config, error) {
+	if j.generator != nil{
+		j.generator.GetArray(path)
+	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return nil, err
@@ -88,6 +108,9 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 }
 
 func (j *jsonConfig) GetInt(path string) (int, error) {
+	if j.generator != nil{
+		j.generator.GetInt(path)
+	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return 0, err
@@ -113,6 +136,9 @@ func (j *jsonConfig) GetInt(path string) (int, error) {
 }
 
 func (j *jsonConfig) GetString(path string) (string, error) {
+	if j.generator != nil{
+		j.generator.GetString(path)
+	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return "", err
@@ -123,4 +149,11 @@ func (j *jsonConfig) GetString(path string) (string, error) {
 	default:
 		return "", fmt.Errorf("value %v is %v type", path, t)
 	}
+}
+
+func (j *jsonConfig) Generate() ([]byte, error){
+	if j.generator != nil{
+		return j.generator.Generate()
+	}
+	return nil, fmt.Errorf("nil generator in config, something went wrong")
 }

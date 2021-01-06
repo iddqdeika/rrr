@@ -21,7 +21,7 @@ type jsonConfigGenerator struct {
 	prefix string
 }
 
-func (j *jsonConfigGenerator) GetArray(path string) ([]*jsonConfigGenerator, error) {
+func (j *jsonConfigGenerator) GetArray(path string) ([]Config, error) {
 	return nil, fmt.Errorf("unimplemented")
 }
 
@@ -61,7 +61,7 @@ func (j *jsonConfigGenerator) GetInt(path string) (int, error) {
 	return i, nil
 }
 
-func (j *jsonConfigGenerator) Child(path string) *jsonConfigGenerator {
+func (j *jsonConfigGenerator) Child(path string) Config {
 	if j.prefix != "" {
 		path = j.prefix + jsonPathDelimiter + path
 	}

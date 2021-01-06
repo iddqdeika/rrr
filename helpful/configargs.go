@@ -13,7 +13,7 @@ const (
 	argsArrayDelimiter = ";"
 )
 
-func FromArgs() *argsConfig {
+func NewArgsConfig() Config {
 	argMap := make(map[string]string)
 	for _, arg := range os.Args {
 		i := strings.Index(arg, "=")
@@ -58,11 +58,11 @@ func (a *argsConfig) GetInt(path string) (int, error) {
 	return 0, fmt.Errorf("value of %v is %v type and has unconvertable value %v", path, reflect.TypeOf(sv), sv)
 }
 
-func (a *argsConfig) GetArray(path string) ([]*argsConfig, error) {
+func (a *argsConfig) GetArray(path string) ([]Config, error) {
 	return nil, fmt.Errorf("array of structs not supported by args config")
 }
 
-func (a *argsConfig) Child(path string) *argsConfig {
+func (a *argsConfig) Child(path string) Config {
 	var fp string
 	if len(a.pathPrefix) > 0 {
 		fp += a.pathPrefix + argsPathDelimiter
