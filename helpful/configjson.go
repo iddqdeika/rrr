@@ -99,7 +99,11 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 	for _, name := range names {
 		switch m := v.(type) {
 		case map[string]interface{}:
-			v = m[name]
+			var exists bool
+			v, exists = m[name]
+			if !exists{
+				return nil, fmt.Errorf("cant get value for %v, element %v doesn't exist", path, name)
+			}
 		default:
 			return nil, fmt.Errorf("cant get value for %v, element %v doesn't exist", path, name)
 		}
