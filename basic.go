@@ -17,7 +17,7 @@ import (
 func BasicEntry(r Root) {
 	// register
 	errors := r.Register()
-	if errors != nil {
+	if len(errors)>0 {
 		for _, err := range errors {
 			log.Printf("error during root register: %v\r\n", err)
 		}
