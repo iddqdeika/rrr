@@ -2,6 +2,8 @@ package rrr
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 )
 
@@ -40,4 +42,15 @@ func collectErr(ch chan error) []error {
 			return errs
 		}
 	}
+}
+
+func ComposeErrors(processName string, errs... error) error {
+	if len(errs) == 0 {
+		return nil
+	}
+	msgs := make([]string, 0)
+	for _, err := range errs {
+		msgs = append(msgs, err.Error())
+	}
+	return fmt.Errorf("errors during %v: %v", processName, strings.Join(msgs, ";"))
 }
