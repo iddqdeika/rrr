@@ -17,7 +17,7 @@ import (
 func BasicEntry(r Root) {
 	// register
 	errors := r.Register()
-	if len(errors)>0 {
+	if len(errors) > 0 {
 		for _, err := range errors {
 			log.Printf("error during root register: %v\r\n", err)
 		}
@@ -35,7 +35,7 @@ func BasicEntry(r Root) {
 	}()
 	err := r.Resolve(ctx)
 	if err != nil {
-		log.Printf("cant register root: %v", err)
+		log.Printf("cant resolve root: %v", err)
 	}
 
 	// release
