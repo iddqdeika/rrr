@@ -8,6 +8,6 @@ For main features:
 
 `import "github.com/iddqdeika/rrr"`
 
-For helpful tools (like config, Logger):
+For helpful tools (like config, Logger, tracing utils):
 
 `import "github.com/iddqdeika/rrr/helpful"`
