@@ -1,6 +1,5 @@
 package helpful
 
-
 // Configuration interface
 // provides some values by given path
 // path delimter must be dot (".")
@@ -22,4 +21,12 @@ type ConfigGenerator interface {
 type Logger interface {
 	Errorf(format string, a ...interface{})
 	Infof(format string, a ...interface{})
+}
+
+type Printer interface {
+	Printf(format string, a ...interface{}) (n int, err error)
+}
+
+type LogsCache interface {
+	GetLastLogs() []string
 }
