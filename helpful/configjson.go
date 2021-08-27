@@ -82,14 +82,29 @@ func (j *jsonConfig) GetArray(path string) ([]Config, error) {
 					pathPrefix: "",
 				})
 			default:
-				return nil, fmt.Errorf("element no %v value of array by path %v is not a json object", i, path)
+				return nil, fmt.Errorf("element with index %v of array by path %v is not a json object", i, path)
 			}
 		}
 		return res, nil
 	default:
 		return nil, fmt.Errorf("value by path %v is not an array", path)
 	}
+}
 
+func (j *jsonConfig) GetInterfaceArray(path string) ([]interface{}, error) {
+	if j.generator != nil {
+		j.generator.GetArray(path)
+	}
+	val, err := j.getValByPath(path)
+	if err != nil {
+		return nil, err
+	}
+	switch arr := val.(type) {
+	case []interface{}:
+		return arr, nil
+	default:
+		return nil, fmt.Errorf("value by path %v is not an array", path)
+	}
 }
 
 func (j *jsonConfig) GetInterface(path string) (interface{}, error) {

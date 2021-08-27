@@ -34,6 +34,19 @@ type argsConfig struct {
 	argMap     map[string]string
 }
 
+func (a *argsConfig) GetInterfaceArray(path string) ([]interface{}, error) {
+	res := make([]interface{}, 0)
+	sv, err := a.GetString(path)
+	if err != nil {
+		return nil, err
+	}
+	vals := strings.Split(sv, argsArrayDelimiter)
+	for _, val := range vals {
+		res = append(res, val)
+	}
+	return res, nil
+}
+
 func (a *argsConfig) GetInterface(path string) (interface{}, error) {
 	sv, err := a.GetString(path)
 	if err != nil {

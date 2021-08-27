@@ -8,6 +8,7 @@ type Config interface {
 	GetInt(path string) (int, error)
 	GetInterface(path string) (interface{}, error)
 	GetArray(path string) ([]Config, error)
+	GetInterfaceArray(path string) ([]interface{}, error)
 	Child(path string) Config
 }
 
