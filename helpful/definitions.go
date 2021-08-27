@@ -6,6 +6,7 @@ package helpful
 type Config interface {
 	GetString(path string) (string, error)
 	GetInt(path string) (int, error)
+	GetInterface(path string) (interface{}, error)
 	GetArray(path string) ([]Config, error)
 	Child(path string) Config
 }

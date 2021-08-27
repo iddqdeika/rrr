@@ -32,9 +32,9 @@ func newJsonCfg(fileName string) (*jsonConfig, error) {
 	return cfg, nil
 }
 
-func NewJsonCfgWithGenerator(fileName string) (ConfigGenerator, error){
+func NewJsonCfgWithGenerator(fileName string) (ConfigGenerator, error) {
 	cfg, err := newJsonCfg(fileName)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	cfg.generator = NewJsonConfigGenerator()
@@ -48,7 +48,7 @@ type jsonConfig struct {
 }
 
 func (j *jsonConfig) Child(path string) Config {
-	if j.generator != nil{
+	if j.generator != nil {
 		j.generator.Child(path)
 	}
 	if j.pathPrefix != "" {
@@ -61,7 +61,7 @@ func (j *jsonConfig) Child(path string) Config {
 }
 
 func (j *jsonConfig) GetArray(path string) ([]Config, error) {
-	if j.generator != nil{
+	if j.generator != nil {
 		j.generator.GetArray(path)
 	}
 	val, err := j.getValByPath(path)
@@ -90,6 +90,10 @@ func (j *jsonConfig) GetArray(path string) ([]Config, error) {
 
 }
 
+func (j *jsonConfig) GetInterface(path string) (interface{}, error) {
+	return j.getValByPath(path)
+}
+
 func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 	if j.pathPrefix != "" {
 		path = j.pathPrefix + jsonPathDelimiter + path
@@ -101,7 +105,7 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 		case map[string]interface{}:
 			var exists bool
 			v, exists = m[name]
-			if !exists{
+			if !exists {
 				return nil, fmt.Errorf("cant get value for %v, element %v doesn't exist", path, name)
 			}
 		default:
@@ -112,7 +116,7 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 }
 
 func (j *jsonConfig) GetInt(path string) (int, error) {
-	if j.generator != nil{
+	if j.generator != nil {
 		j.generator.GetInt(path)
 	}
 	val, err := j.getValByPath(path)
@@ -140,7 +144,7 @@ func (j *jsonConfig) GetInt(path string) (int, error) {
 }
 
 func (j *jsonConfig) GetString(path string) (string, error) {
-	if j.generator != nil{
+	if j.generator != nil {
 		j.generator.GetString(path)
 	}
 	val, err := j.getValByPath(path)
@@ -155,8 +159,8 @@ func (j *jsonConfig) GetString(path string) (string, error) {
 	}
 }
 
-func (j *jsonConfig) Generate() ([]byte, error){
-	if j.generator != nil{
+func (j *jsonConfig) Generate() ([]byte, error) {
+	if j.generator != nil {
 		return j.generator.Generate()
 	}
 	return nil, fmt.Errorf("nil generator in config, something went wrong")

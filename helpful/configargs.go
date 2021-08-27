@@ -34,6 +34,14 @@ type argsConfig struct {
 	argMap     map[string]string
 }
 
+func (a *argsConfig) GetInterface(path string) (interface{}, error) {
+	sv, err := a.GetString(path)
+	if err != nil {
+		return nil, err
+	}
+	return sv, nil
+}
+
 func (a *argsConfig) GetString(path string) (string, error) {
 	var fp string
 	if len(a.pathPrefix) > 0 {
