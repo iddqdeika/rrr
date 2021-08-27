@@ -32,6 +32,8 @@ func newJsonCfg(fileName string) (*jsonConfig, error) {
 	return cfg, nil
 }
 
+// NewJsonCfgWithGenerator инициализирует конфиг с генератором
+// DEPRECATED
 func NewJsonCfgWithGenerator(fileName string) (ConfigGenerator, error) {
 	cfg, err := newJsonCfg(fileName)
 	if err != nil {

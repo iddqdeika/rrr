@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// генератор возвращает дефолтные значения и строит конфиг.
+// NewJsonConfigGenerator генератор возвращает дефолтные значения и строит конфиг.
 // генератор имеет метод Generate, возаращающий слепок конфига
-
+// DEPRECATED
 func NewJsonConfigGenerator() *jsonConfigGenerator {
 	return &jsonConfigGenerator{
 		Root:   make(map[string]interface{}),
@@ -19,6 +19,10 @@ func NewJsonConfigGenerator() *jsonConfigGenerator {
 type jsonConfigGenerator struct {
 	Root   map[string]interface{}
 	prefix string
+}
+
+func (j *jsonConfigGenerator) GetInterface(path string) (interface{}, error) {
+	panic("implement me")
 }
 
 func (j *jsonConfigGenerator) GetArray(path string) ([]Config, error) {
