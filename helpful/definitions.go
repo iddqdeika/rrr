@@ -12,12 +12,7 @@ type Config interface {
 	Child(path string) Config
 }
 
-// Config interface.
-// Also can provide data for Configuration source template (json footprint, etc)
-type ConfigGenerator interface {
-	Generate() ([]byte, error)
-	Config
-}
+type ConfigFactory func() (Config, error)
 
 // Logging interface
 type Logger interface {

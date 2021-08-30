@@ -6,16 +6,6 @@ import (
 	"strings"
 )
 
-// NewJsonConfigGenerator генератор возвращает дефолтные значения и строит конфиг.
-// генератор имеет метод Generate, возаращающий слепок конфига
-// DEPRECATED
-func NewJsonConfigGenerator() *jsonConfigGenerator {
-	return &jsonConfigGenerator{
-		Root:   make(map[string]interface{}),
-		prefix: "",
-	}
-}
-
 type jsonConfigGenerator struct {
 	Root   map[string]interface{}
 	prefix string

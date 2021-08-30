@@ -4,27 +4,96 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const jsonPathDelimiter = "."
 
 func NewJsonCfg(fileName string) (Config, error) {
-	return newJsonCfg(fileName)
-}
-
-func newJsonCfg(fileName string) (*jsonConfig, error) {
-	cfg := &jsonConfig{
-		cfg: make(map[string]interface{}),
-	}
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("cant read config: %v", err)
+		return nil, fmt.Errorf("cant read config file: %v", err)
 	}
+	return newJsonCfgFromBytes(data)
+}
 
-	err = json.Unmarshal(data, &cfg.cfg)
+func NewJsonCfgFromURL(url string) (Config, error) {
+	return newJsonCfgFromURL(url)
+}
+
+func NewJsonCfgFromURLWithRefresh(url string) (Config, func() error, error) {
+	return newJsonCfgWithRefresh(func() ([]byte, error) {
+		return getConfigDataByURL(url)
+	})
+}
+
+func newJsonCfgFromURL(url string) (*jsonConfig, error) {
+	data, err := getConfigDataByURL(url)
+	if err != nil {
+		return nil, err
+	}
+	return newJsonCfgFromBytes(data)
+}
+
+func newJsonCfgFromBytes(data []byte) (*jsonConfig, error) {
+	cfg, err := parseMap(data)
+	if err != nil {
+		return nil, err
+	}
+	return &jsonConfig{
+		cfg: cfg,
+	}, nil
+}
+
+func newJsonCfgWithRefresh(dataFunc func() ([]byte, error)) (*jsonConfig, func() error, error) {
+	res := &jsonConfig{}
+	f := refreshFunc(dataFunc, res)
+	err := f()
+	if err != nil {
+		return nil, nil, err
+	}
+	return res, f, nil
+}
+
+func refreshFunc(dataFunc func() ([]byte, error), res *jsonConfig) func() error {
+	f := func() error {
+		data, err := dataFunc()
+		if err != nil {
+			return err
+		}
+		m, err := parseMap(data)
+		if err != nil {
+			return err
+		}
+		res.Lock()
+		defer res.Unlock()
+		res.cfg = m
+		return nil
+	}
+	return f
+}
+
+func getConfigDataByURL(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("cant get config data from url %v: %v", url, err)
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("cand read data from response for url %v: %v", url, err)
+	}
+	return data, nil
+}
+
+func parseMap(data []byte) (map[string]interface{}, error) {
+	cfg := make(map[string]interface{})
+
+	err := json.Unmarshal(data, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("cant unmarshal config: %v", err)
 	}
@@ -32,40 +101,26 @@ func newJsonCfg(fileName string) (*jsonConfig, error) {
 	return cfg, nil
 }
 
-// NewJsonCfgWithGenerator инициализирует конфиг с генератором
-// DEPRECATED
-func NewJsonCfgWithGenerator(fileName string) (ConfigGenerator, error) {
-	cfg, err := newJsonCfg(fileName)
-	if err != nil {
-		return nil, err
-	}
-	cfg.generator = NewJsonConfigGenerator()
-	return cfg, nil
-}
-
 type jsonConfig struct {
 	cfg        map[string]interface{}
 	pathPrefix string
-	generator  *jsonConfigGenerator
+	parent     *jsonConfig
+
+	sync.RWMutex
 }
 
 func (j *jsonConfig) Child(path string) Config {
-	if j.generator != nil {
-		j.generator.Child(path)
-	}
-	if j.pathPrefix != "" {
-		path = j.pathPrefix + jsonPathDelimiter + path
-	}
+	//if j.pathPrefix != "" {
+	//	path = j.pathPrefix + jsonPathDelimiter + path
+	//}
 	return &jsonConfig{
 		cfg:        j.cfg,
 		pathPrefix: path,
+		parent:     j,
 	}
 }
 
 func (j *jsonConfig) GetArray(path string) ([]Config, error) {
-	if j.generator != nil {
-		j.generator.GetArray(path)
-	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return nil, err
@@ -75,11 +130,11 @@ func (j *jsonConfig) GetArray(path string) ([]Config, error) {
 	case []interface{}:
 		res := make([]Config, 0)
 		for i, v := range arr {
-			switch m := v.(type) {
+			switch v.(type) {
 			case map[string]interface{}:
 				res = append(res, &jsonConfig{
-					cfg:        m,
-					pathPrefix: "",
+					parent:     j,
+					pathPrefix: path + jsonPathDelimiter + strconv.Itoa(i),
 				})
 			default:
 				return nil, fmt.Errorf("element with index %v of array by path %v is not a json object", i, path)
@@ -92,9 +147,6 @@ func (j *jsonConfig) GetArray(path string) ([]Config, error) {
 }
 
 func (j *jsonConfig) GetInterfaceArray(path string) ([]interface{}, error) {
-	if j.generator != nil {
-		j.generator.GetArray(path)
-	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return nil, err
@@ -115,8 +167,15 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 	if j.pathPrefix != "" {
 		path = j.pathPrefix + jsonPathDelimiter + path
 	}
+	if j.parent != nil {
+		return j.parent.getValByPath(path)
+	}
+	j.RLock()
+	defer j.RUnlock()
 	names := strings.Split(path, jsonPathDelimiter)
 	var v interface{} = j.cfg
+	processedPath := ""
+	delim := ""
 	for _, name := range names {
 		switch m := v.(type) {
 		case map[string]interface{}:
@@ -125,17 +184,25 @@ func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
 			if !exists {
 				return nil, fmt.Errorf("cant get value for %v, element %v doesn't exist", path, name)
 			}
+		case []interface{}:
+			i, err := strconv.Atoi(name)
+			if err != nil {
+				return nil, fmt.Errorf("cant get value for %v, element %v is an array, but given %v key isn't a number", path, processedPath, name)
+			}
+			if i > len(m)-1 {
+				return nil, fmt.Errorf("cant get value for %v, array %v has %v elements, but %v key has given", path, processedPath, len(m), i)
+			}
+			v = m[i]
 		default:
 			return nil, fmt.Errorf("cant get value for %v, element %v doesn't exist", path, name)
 		}
+		processedPath += delim + name
+		delim = jsonPathDelimiter
 	}
 	return v, nil
 }
 
 func (j *jsonConfig) GetInt(path string) (int, error) {
-	if j.generator != nil {
-		j.generator.GetInt(path)
-	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return 0, err
@@ -161,9 +228,6 @@ func (j *jsonConfig) GetInt(path string) (int, error) {
 }
 
 func (j *jsonConfig) GetString(path string) (string, error) {
-	if j.generator != nil {
-		j.generator.GetString(path)
-	}
 	val, err := j.getValByPath(path)
 	if err != nil {
 		return "", err
@@ -174,11 +238,4 @@ func (j *jsonConfig) GetString(path string) (string, error) {
 	default:
 		return "", fmt.Errorf("value %v is %v type", path, t)
 	}
-}
-
-func (j *jsonConfig) Generate() ([]byte, error) {
-	if j.generator != nil {
-		return j.generator.Generate()
-	}
-	return nil, fmt.Errorf("nil generator in config, something went wrong")
 }
