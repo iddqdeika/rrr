@@ -34,6 +34,17 @@ type argsConfig struct {
 	argMap     map[string]string
 }
 
+func (a *argsConfig) AsMap() (map[string]interface{}, error) {
+	if a.pathPrefix != "" {
+		return nil, fmt.Errorf("AsMap method not supported by args config")
+	}
+	res := make(map[string]interface{})
+	for k, v := range a.argMap {
+		res[k] = v
+	}
+	return res, nil
+}
+
 func (a *argsConfig) GetInterfaceArray(path string) ([]interface{}, error) {
 	res := make([]interface{}, 0)
 	sv, err := a.GetString(path)

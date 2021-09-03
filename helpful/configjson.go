@@ -109,6 +109,18 @@ type jsonConfig struct {
 	sync.RWMutex
 }
 
+func (j *jsonConfig) AsMap() (map[string]interface{}, error) {
+	v, err := j.getValByPath("")
+	if err != nil {
+		return nil, err
+	}
+	res, ok := v.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("value by path %v isn't object and cannot be converted to map", j.pathPrefix)
+	}
+	return res, nil
+}
+
 func (j *jsonConfig) Child(path string) Config {
 	//if j.pathPrefix != "" {
 	//	path = j.pathPrefix + jsonPathDelimiter + path
@@ -164,9 +176,7 @@ func (j *jsonConfig) GetInterface(path string) (interface{}, error) {
 }
 
 func (j *jsonConfig) getValByPath(path string) (interface{}, error) {
-	if j.pathPrefix != "" {
-		path = j.pathPrefix + jsonPathDelimiter + path
-	}
+	path = strings.Trim(j.pathPrefix+jsonPathDelimiter+path, jsonPathDelimiter)
 	if j.parent != nil {
 		return j.parent.getValByPath(path)
 	}

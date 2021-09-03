@@ -10,6 +10,7 @@ type Config interface {
 	GetArray(path string) ([]Config, error)
 	GetInterfaceArray(path string) ([]interface{}, error)
 	Child(path string) Config
+	AsMap() (map[string]interface{}, error)
 }
 
 type ConfigFactory func() (Config, error)

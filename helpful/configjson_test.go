@@ -2,6 +2,17 @@ package helpful
 
 import "testing"
 
+const defaultData = `
+{
+	"A": {
+			"B":"test"
+		},
+	"arr": [
+			{"val":"someval1"},{"val":"someval2"}
+		]
+}
+`
+
 func testJsonConfig(t *testing.T, cfg *jsonConfig) {
 
 	res, err := cfg.Child("A").GetString("B")
@@ -29,16 +40,7 @@ func testJsonConfig(t *testing.T, cfg *jsonConfig) {
 }
 
 func TestJsonFromBytes(t *testing.T) {
-	data := `
-{
-	"A": {
-			"B":"test"
-		},
-	"arr": [
-			{"val":"someval1"},{"val":"someval2"}
-		]
-}
-`
+	data := defaultData
 	cfg, err := newJsonCfgFromBytes([]byte(data))
 	if err != nil {
 		t.Fatal("cant init json config from hardcode")
@@ -48,16 +50,7 @@ func TestJsonFromBytes(t *testing.T) {
 
 func TestJsonFromBytesWithRefresh(t *testing.T) {
 	//var data = new(string)
-	data := `
-{
-	"A": {
-			"B":"test"
-		},
-	"arr": [
-			{"val":"someval1"},{"val":"someval2"}
-		]
-}
-`
+	data := defaultData
 	cfg, f, err := newJsonCfgWithRefresh(func() ([]byte, error) {
 		return []byte(data), nil
 	})
@@ -96,5 +89,10 @@ func testChildren(t *testing.T, children []Config) {
 	}
 	if res != "someval2" {
 		t.Errorf("invalid value %v instead of %v", res, "test")
+	}
+
+	_, err = children[1].AsMap()
+	if err != nil {
+		t.Errorf("cant convert object to map")
 	}
 }

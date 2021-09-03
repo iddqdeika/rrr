@@ -11,6 +11,10 @@ type jsonConfigGenerator struct {
 	prefix string
 }
 
+func (j *jsonConfigGenerator) AsMap() (map[string]interface{}, error) {
+	return nil, fmt.Errorf("unimplemented")
+}
+
 func (j *jsonConfigGenerator) GetInterfaceArray(path string) ([]interface{}, error) {
 	return nil, fmt.Errorf("unimplemented")
 }
