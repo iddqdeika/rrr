@@ -51,7 +51,7 @@ func TestJsonFromBytes(t *testing.T) {
 func TestJsonFromBytesWithRefresh(t *testing.T) {
 	//var data = new(string)
 	data := defaultData
-	cfg, f, err := newJsonCfgWithRefresh(func() ([]byte, error) {
+	cfg, f, err := NewJsonCfgFromDataFunc(func() ([]byte, error) {
 		return []byte(data), nil
 	})
 	if err != nil {

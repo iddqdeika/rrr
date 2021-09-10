@@ -13,6 +13,10 @@ import (
 
 const jsonPathDelimiter = "."
 
+// ConfigRefreshFunc - refresh corresponding Config
+// use it to refresh Config content on flight
+type ConfigRefreshFunc func() error
+
 func NewJsonCfg(fileName string) (Config, error) {
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -25,8 +29,8 @@ func NewJsonCfgFromURL(url string) (Config, error) {
 	return newJsonCfgFromURL(url)
 }
 
-func NewJsonCfgFromURLWithRefresh(url string) (Config, func() error, error) {
-	return newJsonCfgWithRefresh(func() ([]byte, error) {
+func NewJsonCfgFromURLWithRefresh(url string) (Config, ConfigRefreshFunc, error) {
+	return NewJsonCfgFromDataFunc(func() ([]byte, error) {
 		return getConfigDataByURL(url)
 	})
 }
@@ -49,7 +53,7 @@ func newJsonCfgFromBytes(data []byte) (*jsonConfig, error) {
 	}, nil
 }
 
-func newJsonCfgWithRefresh(dataFunc func() ([]byte, error)) (*jsonConfig, func() error, error) {
+func NewJsonCfgFromDataFunc(dataFunc func() ([]byte, error)) (*jsonConfig, ConfigRefreshFunc, error) {
 	res := &jsonConfig{}
 	f := refreshFunc(dataFunc, res)
 	err := f()
@@ -59,7 +63,7 @@ func newJsonCfgWithRefresh(dataFunc func() ([]byte, error)) (*jsonConfig, func()
 	return res, f, nil
 }
 
-func refreshFunc(dataFunc func() ([]byte, error), res *jsonConfig) func() error {
+func refreshFunc(dataFunc func() ([]byte, error), res *jsonConfig) ConfigRefreshFunc {
 	f := func() error {
 		data, err := dataFunc()
 		if err != nil {
@@ -88,6 +92,17 @@ func getConfigDataByURL(url string) ([]byte, error) {
 		return nil, fmt.Errorf("cand read data from response for url %v: %v", url, err)
 	}
 	return data, nil
+}
+
+func DataFuncFromRequest(req *http.Request) func() ([]byte, error) {
+	return func() ([]byte, error) {
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer resp.Body.Close()
+		return ioutil.ReadAll(resp.Body)
+	}
 }
 
 func parseMap(data []byte) (map[string]interface{}, error) {
