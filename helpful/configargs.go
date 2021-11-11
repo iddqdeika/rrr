@@ -34,6 +34,16 @@ type argsConfig struct {
 	argMap     map[string]string
 }
 
+func (a *argsConfig) Contains(path string) bool {
+	var fp string
+	if len(a.pathPrefix) > 0 {
+		fp += a.pathPrefix + argsPathDelimiter
+	}
+	fp += path
+	_, ok := a.argMap[fp]
+	return ok
+}
+
 func (a *argsConfig) AsMap() (map[string]interface{}, error) {
 	if a.pathPrefix != "" {
 		return nil, fmt.Errorf("AsMap method not supported by args config")

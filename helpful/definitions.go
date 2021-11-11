@@ -11,6 +11,7 @@ type Config interface {
 	GetInterfaceArray(path string) ([]interface{}, error)
 	Child(path string) Config
 	AsMap() (map[string]interface{}, error)
+	Contains(path string) bool
 }
 
 type ConfigFactory func() (Config, error)
