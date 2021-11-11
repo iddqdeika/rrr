@@ -2,7 +2,7 @@
 
 Some helpful tools to implement RRR pattern (Register Resolve Release)
 
-##### Import (_i suggest to use go.mod, but you can "go get" it_):
+##### Import (_i suggest to use go.mod_):
 
 For main features:
 
