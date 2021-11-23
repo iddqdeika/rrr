@@ -125,7 +125,7 @@ type jsonConfig struct {
 }
 
 func (j *jsonConfig) Fill(i interface{}) error {
-	m, err := j.getValByPath(j.pathPrefix)
+	m, err := j.getValByPath("")
 	if err != nil {
 		return err
 	}
