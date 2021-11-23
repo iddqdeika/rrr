@@ -124,6 +124,18 @@ type jsonConfig struct {
 	sync.RWMutex
 }
 
+func (j *jsonConfig) Fill(i interface{}) error {
+	m, err := j.getValByPath(j.pathPrefix)
+	if err != nil {
+		return err
+	}
+	data, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, i)
+}
+
 func (j *jsonConfig) Contains(path string) bool {
 	v, _ := j.getValByPath(path)
 	return v != nil

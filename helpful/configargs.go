@@ -34,6 +34,10 @@ type argsConfig struct {
 	argMap     map[string]string
 }
 
+func (a *argsConfig) Fill(i interface{}) error {
+	panic("implement me")
+}
+
 func (a *argsConfig) Contains(path string) bool {
 	var fp string
 	if len(a.pathPrefix) > 0 {

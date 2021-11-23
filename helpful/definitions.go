@@ -12,6 +12,7 @@ type Config interface {
 	Child(path string) Config
 	AsMap() (map[string]interface{}, error)
 	Contains(path string) bool
+	Fill(i interface{}) error
 }
 
 type ConfigFactory func() (Config, error)
